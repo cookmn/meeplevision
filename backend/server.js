@@ -1,6 +1,7 @@
 const db = require("./db");
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -8,17 +9,9 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-const path = require("path");
-
-// Serve static frontend files
-app.use(express.static(path.join(__dirname, "../frontend/dist")));
-
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/dist", "index.html"));
-});
-
+// ✅ Define API routes FIRST
 app.get("/api/search", async (req, res) => {
-    console.log('searching');
+  console.log('searching');
   const { query } = req.query;
   if (!query) {
     return res.status(400).json({ error: "Query parameter is required" });
@@ -45,7 +38,14 @@ app.get("/api/search", async (req, res) => {
   }
 });
 
-// Start the server
+// ✅ Serve frontend static files AFTER defining API routes
+app.use(express.static(path.join(__dirname, "../frontend/build")));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
+});
+
+// ✅ Start the server
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
 });
