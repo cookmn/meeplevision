@@ -1,0 +1,9 @@
+# Ignore node_modules (installed via npm)
+node_modules/
+
+# Ignore Python virtual environment
+meeplevision-env/
+
+# Ignore TensorFlow libraries
+*.dylib
+*.so
