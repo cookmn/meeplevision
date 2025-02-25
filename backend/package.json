@@ -3,9 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "start": "node server.js",
     "heroku-postbuild": "cd ../frontend && npm install && npm run build"
   },
   "dependencies": {
