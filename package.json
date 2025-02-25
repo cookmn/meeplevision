@@ -1,0 +1,12 @@
+{
+    "name": "meeplevision",
+    "private": true,
+    "scripts": {
+      "start": "node backend/server.js",
+      "heroku-postbuild": "cd frontend && npm install && npm run build"
+    },
+    "engines": {
+      "node": "18.x"
+    }
+  }
+  
