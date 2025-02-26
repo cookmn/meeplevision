@@ -15,30 +15,95 @@ app.use(express.json());
 
 // ✅ Define API routes FIRST
 app.get("/api/search", async (req, res) => {
-  console.log('searching');
   const { query } = req.query;
   if (!query) {
     return res.status(400).json({ error: "Query parameter is required" });
   }
 
   try {
-    // 🔍 Search the games table in PostgreSQL
-    const dbResult = await db.query(
-      "SELECT * FROM games WHERE LOWER(name) = LOWER($1)",
-      [query]
-    );
+    console.log(`🔍 Searching database for: ${query}`);
+
+    // Step 1: Check if the game exists in our database
+    let dbResult = await db.query("SELECT * FROM games WHERE LOWER(name) = LOWER($1)", [query]);
 
     if (dbResult.rows.length > 0) {
-      console.log("Found in database:", dbResult.rows);
+      console.log("✅ Found in database:", dbResult.rows[0]);
       return res.json({ games: dbResult.rows });
     }
 
-    // If no results found, return an empty array
-    return res.json({ games: [] });
+    console.log("❌ Game not found in database, fetching from BGG...");
+
+    // Step 2: Fetch game data from BGG
+    const bggSearchResponse = await axios.get(`https://www.boardgamegeek.com/xmlapi/search?search=${query}`);
+    const searchResult = await parser.parseStringPromise(bggSearchResponse.data);
+
+    if (!searchResult.boardgames || !searchResult.boardgames.boardgame) {
+      return res.json({ games: [] }); // No results found on BGG either
+    }
+
+    const firstGame = Array.isArray(searchResult.boardgames.boardgame)
+      ? searchResult.boardgames.boardgame[0]
+      : searchResult.boardgames.boardgame;
+
+    const bggId = firstGame.$.objectid;
+    console.log(`✅ Found BGG ID: ${bggId}, fetching details...`);
+
+    dbResult = await db.query("SELECT * FROM games WHERE bgg_id = $1", [bggId]);
+    if (dbResult.rows.length > 0) {
+      console.log("✅ Found in database:", dbResult.rows[0]);
+      return res.json({ games: dbResult.rows });
+    }
+
+    // Step 3: Fetch detailed game info from BGG
+    const detailsResponse = await axios.get(`https://www.boardgamegeek.com/xmlapi2/thing?id=${bggId}`);
+    const detailsResult = await parser.parseStringPromise(detailsResponse.data);
+
+    if (!detailsResult.items || !detailsResult.items.item) {
+      return res.json({ games: [] }); // No detailed data available
+    }
+
+    const game = detailsResult.items.item;
+    console.log('game is: ', game.name);
+    const name = game.name.length ? game.name[0].$.value : game.name.$.value;
+
+    // Extract game details
+    const gameData = {
+      bgg_id: bggId,
+      name: name,
+      min_players: game.minplayers ? game.minplayers.$.value : "Unknown",
+      max_players: game.maxplayers ? game.maxplayers.$.value : "Unknown",
+      play_time: game.playingtime ? game.playingtime.$.value : "Unknown",
+      image: game.image || "",
+      thumbnail: game.thumbnail || "",
+    };
+
+    console.log("✅ Saving game to database:", gameData);
+
+    // Step 4: Insert the new game into our database
+    const insertQuery = `
+    INSERT INTO games (id, bgg_id, name, player_count, play_time, image, thumbnail) 
+    VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6) 
+    RETURNING *;
+  `;
+  
+  const insertValues = [
+    gameData.bgg_id,
+    gameData.name,
+    `${gameData.min_players}-${gameData.max_players}`,
+    gameData.play_time,
+    gameData.image,
+    gameData.thumbnail,
+  ];
+  
+  const newGameResult = await db.query(insertQuery, insertValues);
+  console.log("✅ Game successfully added to database!", newGameResult.rows[0]);
+
+    // Step 5: Return the newly added game
+    return res.json({ games: newGameResult.rows });
 
   } catch (error) {
-    console.error("❌ Error fetching from database:", error);
-    res.status(500).json({ error: "Database error" });
+    console.error("❌ Error:", error.message);
+    res.status(500).json({ error: "Failed to fetch or save game data" });
   }
 });
 
@@ -63,75 +128,6 @@ app.post('/api/games', async (req, res) => {
   } catch (err) {
     console.error('Error adding game:', err);
     res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-app.get("/api/bgg-search", async (req, res) => {
-  const { query } = req.query;
-  if (!query) {
-    return res.status(400).json({ error: "Query parameter is required" });
-  }
-
-  try {
-    console.log(`🔍 Searching BGG for: ${query}`);
-
-    // Step 1: Search BGG to get the game ID
-    const searchResponse = await axios.get(
-      `https://www.boardgamegeek.com/xmlapi/search?search=${query}`
-    );
-
-    const searchResult = await parser.parseStringPromise(searchResponse.data);
-
-    if (!searchResult.boardgames || !searchResult.boardgames.boardgame) {
-      return res.json({ game: null }); // No results found
-    }
-
-    const games = Array.isArray(searchResult.boardgames.boardgame)
-      ? searchResult.boardgames.boardgame
-      : [searchResult.boardgames.boardgame];
-
-    // Get the first game match
-    const firstGame = games[0];
-    const bggId = firstGame.$.objectid;
-
-    console.log(`✅ Found game ID: ${bggId}, fetching details...`);
-
-    // Step 2: Fetch game details using the BGG ID
-    const detailsResponse = await axios.get(
-      `https://www.boardgamegeek.com/xmlapi2/thing?id=${bggId}`
-    );
-    console.log('detailsResponse is: ', detailsResponse);
-
-    const detailsResult = await parser.parseStringPromise(detailsResponse.data);
-    console.log('detailsResult is: ', detailsResult);
-
-    if (!detailsResult.items || !detailsResult.items.item) {
-      return res.json({ game: null }); // No detailed info found
-    }
-
-    const game = detailsResult.items.item;
-    console.log('game is: ', game);
-
-    // Extract full game details
-    const gameData = {
-      bgg_id: bggId,
-      name: game.name ? game.name.value : "Unknown",
-      year_published: game.yearpublished ? game.yearpublished.value : "Unknown",
-      min_players: game.minplayers ? game.minplayers.$.value : "Unknown",
-      max_players: game.maxplayers ? game.maxplayers.$.value : "Unknown",
-      min_play_time: game.minplaytime ? game.minplaytime.$.value : "Unknown",
-      max_play_time: game.maxplaytime ? game.maxplaytime.$.value : "Unknown",
-      description: game.description || "No description available.",
-      image: game.image || "",
-      thumbnail: game.thumbnail || "",
-    };
-
-    console.log("✅ Found full game details on BGG:", gameData);
-    res.json({ game: gameData });
-
-  } catch (error) {
-    console.error("❌ Error fetching data from BGG:", error.message);
-    res.status(500).json({ error: "Failed to fetch data from BGG" });
   }
 });
 
