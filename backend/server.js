@@ -2,6 +2,7 @@ const db = require("./db");
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+import axios from "axios";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
