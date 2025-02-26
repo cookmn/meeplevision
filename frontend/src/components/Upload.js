@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-const API_BASE_URL = "https://meeplevision-950d3d3db41e.herokuapp.com";
-// const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://meeplevision-950d3d3db41e.herokuapp.com" // 🔥 Use Heroku in production
+    : "http://localhost:5000"; // 🔧 Use local backend in development
+
 
 const Search = () => {
   const [query, setQuery] = useState("");
