@@ -3,6 +3,7 @@ const cors = require("cors");
 const path = require("path");
 const axios = require("axios");
 const xml2js = require("xml2js"); // Converts XML to JSON
+<<<<<<< HEAD
 const db = require("./db"); // Database connection
 const passport = require("passport");
 const session = require("express-session");
@@ -12,6 +13,14 @@ require("./auth"); // Ensure authentication is set up
 const app = express();
 const parser = new xml2js.Parser({ explicitArray: false });
 
+=======
+
+
+const parser = new xml2js.Parser({ explicitArray: false });
+
+const app = express();
+require("./auth")(app);
+>>>>>>> eb6e95f (Fix: Update OAuth callback URL for Heroku)
 const PORT = process.env.PORT || 5000;
 
 // ✅ Middleware
