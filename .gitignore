@@ -7,3 +7,4 @@ meeplevision-env/
 # Ignore TensorFlow libraries
 *.dylib
 *.so
+backend/.env
