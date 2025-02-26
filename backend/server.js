@@ -3,6 +3,9 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const axios = require("axios");
+const xml2js = require("xml2js"); // Converts XML to JSON
+
+const parser = new xml2js.Parser({ explicitArray: false });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
