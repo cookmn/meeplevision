@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 
+const API_BASE_URL = "https://meeplevision-950d3d3db41e.herokuapp.com";
+
 const Search = () => {
   const [query, setQuery] = useState("");
   const [games, setGames] = useState([]);
@@ -15,7 +17,7 @@ const Search = () => {
     try {
         console.log('trying');
       const response = await axios.get(
-        `http://localhost:5000/api/search?query=${query}`
+        `${API_BASE_URL}/api/search?query=${query}`
       );
       console.log('response is: ', response);
       setGames(response?.data?.games || []);
