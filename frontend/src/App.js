@@ -14,28 +14,41 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in
-    console.log('doing the thing');
-    axios.get(`${API_BASE_URL}/auth/status`, { withCredentials: true })
-      .then(response => {
+    console.log("🌐 Checking auth status...");
+
+    axios
+      .get(`${API_BASE_URL}/auth/status`, { withCredentials: true }) // Ensure cookies are sent
+      .then((response) => {
+        console.log("🔍 Auth status response:", response.data);
+
         if (response.data.loggedIn) {
+          console.log("✅ User is logged in:", response.data.user);
           setUser(response.data.user);
         } else {
-          window.location.href = `${API_BASE_URL}/auth/google`; // 🔒 Redirect to Google login
+          console.log("❌ User not logged in, redirecting...");
+          window.location.href = `${API_BASE_URL}/auth/google`;
         }
       })
-      .catch(error => console.error("❌ Error checking auth status:", error))
-      .finally(() => setLoading(false));
+      .catch((error) => {
+        console.error("❌ Error checking auth status:", error);
+      })
+      .finally(() => {
+        console.log("✅ Auth check complete.");
+        setLoading(false);
+      });
   }, []);
 
+  // ⏳ Show loading while checking auth
   if (loading) {
     return <h1 className="text-center">Checking authentication...</h1>;
   }
 
+  // ❌ If user is still null after the check, something went wrong
   if (!user) {
-    return <h1 className="text-center">Redirecting to login...</h1>;
+    return <h1 className="text-center text-red-500">❌ Authentication failed. Try refreshing.</h1>;
   }
 
+  // ✅ If user is logged in, show the main app
   return (
     <Router>
       <div className="App">

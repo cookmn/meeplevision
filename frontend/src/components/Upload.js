@@ -21,6 +21,7 @@ const Search = () => {
 
     try {
       console.log("🔍 Searching database...");
+      console.log("Using API URL:", API_BASE_URL);
       const response = await axios.get(`${API_BASE_URL}/api/search?query=${query}`);
       console.log("Response:", response);
       setGames(response?.data?.games || []);
