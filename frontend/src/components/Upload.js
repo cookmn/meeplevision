@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-// const API_BASE_URL = "https://meeplevision-950d3d3db41e.herokuapp.com";
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = "https://meeplevision-950d3d3db41e.herokuapp.com";
+// const API_BASE_URL = "http://localhost:5000";
 
 const Search = () => {
   const [query, setQuery] = useState("");
