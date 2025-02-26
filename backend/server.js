@@ -38,6 +38,30 @@ app.get("/api/search", async (req, res) => {
   }
 });
 
+app.post('/api/games', async (req, res) => {
+  try {
+    const { name, player_count, play_time } = req.body;
+
+    // Validate required fields
+    if (!name) {
+      return res.status(400).json({ error: 'Game name is required' });
+    }
+
+    // Insert into database
+    const result = await db.query(
+      `INSERT INTO games (name, player_count, play_time) 
+       VALUES ($1, $2, $3) RETURNING *`,
+      [name, player_count || null, play_time || null]
+    );
+    console.log('result is: ', result);
+
+    res.status(201).json({ message: 'Game added successfully', game: result.rows[0] });
+  } catch (err) {
+    console.error('Error adding game:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // ✅ Serve frontend static files AFTER defining API routes
 app.use(express.static(path.join(__dirname, "../frontend/build")));
 
