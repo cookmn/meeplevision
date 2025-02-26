@@ -62,6 +62,45 @@ app.post('/api/games', async (req, res) => {
   }
 });
 
+app.get("/api/bgg-search", async (req, res) => {
+  const { query } = req.query;
+  if (!query) {
+    return res.status(400).json({ error: "Query parameter is required" });
+  }
+
+  try {
+    console.log(`🔍 Searching BGG for: ${query}`);
+    const response = await axios.get(
+      `https://www.boardgamegeek.com/xmlapi/search?search=${query}`
+    );
+
+    // Convert XML response to JSON
+    const result = await parser.parseStringPromise(response.data);
+
+    if (!result.boardgames || !result.boardgames.boardgame) {
+      return res.json({ game: null }); // No results found
+    }
+
+    const games = Array.isArray(result.boardgames.boardgame)
+      ? result.boardgames.boardgame
+      : [result.boardgames.boardgame];
+
+    // Get the first game match
+    const firstGame = games[0];
+    const gameData = {
+      name: Array.isArray(firstGame.name) ? firstGame.name[0]._ : firstGame.name._,
+      player_count: "Unknown", // BGG API doesn't provide player count directly
+      play_time: firstGame.yearpublished ? firstGame.yearpublished._ : "Unknown",
+    };
+
+    console.log("✅ Found game on BGG:", gameData);
+    res.json({ game: gameData });
+  } catch (error) {
+    console.error("❌ Error fetching data from BGG:", error.message);
+    res.status(500).json({ error: "Failed to fetch data from BGG" });
+  }
+});
+
 // ✅ Serve frontend static files AFTER defining API routes
 app.use(express.static(path.join(__dirname, "../frontend/build")));
 

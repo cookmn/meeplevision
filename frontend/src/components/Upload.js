@@ -9,6 +9,7 @@ const Search = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
+  const [bggGame, setBggGame] = useState(null);
   const [newGame, setNewGame] = useState({
     name: "",
     player_count: "",
@@ -21,17 +22,19 @@ const Search = () => {
     setLoading(true);
     setError("");
     setShowAddForm(false);
+    setBggGame(null);
 
     try {
-      console.log("Trying to search...");
+      console.log("🔍 Searching database...");
       const response = await axios.get(`${API_BASE_URL}/api/search?query=${query}`);
-      console.log("Response is:", response);
+      console.log("Response:", response);
       setGames(response?.data?.games || []);
 
+      console.log('response is: ', response);
+
       if (!response?.data?.games?.length) {
-        console.log("No game found, prompting user to add.");
-        setShowAddForm(true);
-        setNewGame({ ...newGame, name: query });
+        console.log("❌ Game not found in database, checking BGG...");
+        fetchGameFromBGG(query);
       }
     } catch (err) {
       setError("Error fetching games. Try again.");
@@ -40,13 +43,38 @@ const Search = () => {
     }
   };
 
+  const fetchGameFromBGG = async (gameName) => {
+    try {
+      console.log(`🌍 Searching for ${gameName} in BGG...`);
+      const response = await axios.get(`${API_BASE_URL}/api/bgg-search?query=${gameName}`);
+  
+      if (response?.data?.game) {
+        setBggGame(response.data.game);
+        setShowAddForm(true);
+        setNewGame({
+          name: response.data.game.name,
+          player_count: response.data.game.player_count || "Unknown",
+          play_time: response.data.game.play_time || "Unknown",
+        });
+      } else {
+        console.log("❌ No game found on BGG.");
+        setShowAddForm(true);
+        setNewGame({ ...newGame, name: gameName });
+      }
+    } catch (err) {
+      console.error("❌ Error fetching from BGG:", err.message);
+      setShowAddForm(true);
+      setNewGame({ ...newGame, name: gameName });
+    }
+  };
+
   // 🆕 Add a New Game to the Database
   const addGame = async () => {
     try {
-      console.log("Adding new game:", newGame);
+      console.log("➕ Adding new game:", newGame);
       await axios.post(`${API_BASE_URL}/api/games`, newGame);
       setError("");
-      alert("Game added successfully!");
+      alert("✅ Game added successfully!");
 
       // Re-run the search to show the new game in the list
       searchGames();
@@ -99,7 +127,22 @@ const Search = () => {
         ))}
       </ul>
 
-      {/* 🆕 Add Game Form (Only Shows if No Results) */}
+      {/* 🌍 Show Game from BGG if Not in Database */}
+      {bggGame && (
+        <div className="mt-8 p-6 border border-yellow-400 bg-yellow-100 rounded-lg shadow-xl text-gray-900 max-w-lg mx-auto">
+          <h2 className="text-xl font-semibold text-center text-yellow-700 mb-4">⚠️ This game is from BoardGameGeek</h2>
+          <p className="text-center mb-4 text-gray-700">This data is not yet in our database.</p>
+          <h2 className="text-xl font-bold text-purple-700">{bggGame.name}</h2>
+          <p className="text-gray-700 mt-2">
+            <span className="font-semibold">Players:</span> {bggGame.player_count}
+          </p>
+          <p className="text-gray-700">
+            <span className="font-semibold">Play Time:</span> {bggGame.play_time} min
+          </p>
+        </div>
+      )}
+
+      {/* 🆕 Add Game Form */}
       {showAddForm && (
         <div className="mt-8 p-6 border border-gray-300 rounded-lg shadow-xl bg-gray-100 text-gray-900 max-w-lg mx-auto">
           <h2 className="text-xl font-semibold text-center text-purple-700 mb-4">Game Not Found – Add a New Game</h2>
