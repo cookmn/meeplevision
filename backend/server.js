@@ -5,9 +5,11 @@ const path = require("path");
 const axios = require("axios");
 const xml2js = require("xml2js"); // Converts XML to JSON
 
+
 const parser = new xml2js.Parser({ explicitArray: false });
 
 const app = express();
+require("./auth")(app);
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
