@@ -137,8 +137,13 @@ app.post('/api/games', async (req, res) => {
 app.use(express.static(path.join(__dirname, "../frontend/build")));
 
 app.get("*", (req, res) => {
+  if (!req.user) {
+    console.log("🔒 User not logged in, redirecting to Google login...");
+    return res.redirect("/auth/google");
+  }
   res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
 });
+
 
 // ✅ Start the server
 app.listen(PORT, () => {
