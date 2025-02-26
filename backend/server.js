@@ -74,31 +74,61 @@ app.get("/api/bgg-search", async (req, res) => {
 
   try {
     console.log(`🔍 Searching BGG for: ${query}`);
-    const response = await axios.get(
+
+    // Step 1: Search BGG to get the game ID
+    const searchResponse = await axios.get(
       `https://www.boardgamegeek.com/xmlapi/search?search=${query}`
     );
 
-    // Convert XML response to JSON
-    const result = await parser.parseStringPromise(response.data);
+    const searchResult = await parser.parseStringPromise(searchResponse.data);
 
-    if (!result.boardgames || !result.boardgames.boardgame) {
+    if (!searchResult.boardgames || !searchResult.boardgames.boardgame) {
       return res.json({ game: null }); // No results found
     }
 
-    const games = Array.isArray(result.boardgames.boardgame)
-      ? result.boardgames.boardgame
-      : [result.boardgames.boardgame];
+    const games = Array.isArray(searchResult.boardgames.boardgame)
+      ? searchResult.boardgames.boardgame
+      : [searchResult.boardgames.boardgame];
 
     // Get the first game match
     const firstGame = games[0];
+    const bggId = firstGame.$.objectid;
+
+    console.log(`✅ Found game ID: ${bggId}, fetching details...`);
+
+    // Step 2: Fetch game details using the BGG ID
+    const detailsResponse = await axios.get(
+      `https://www.boardgamegeek.com/xmlapi2/thing?id=${bggId}`
+    );
+    console.log('detailsResponse is: ', detailsResponse);
+
+    const detailsResult = await parser.parseStringPromise(detailsResponse.data);
+    console.log('detailsResult is: ', detailsResult);
+
+    if (!detailsResult.items || !detailsResult.items.item) {
+      return res.json({ game: null }); // No detailed info found
+    }
+
+    const game = detailsResult.items.item;
+    console.log('game is: ', game);
+
+    // Extract full game details
     const gameData = {
-      name: Array.isArray(firstGame.name) ? firstGame.name[0]._ : firstGame.name._,
-      player_count: "Unknown", // BGG API doesn't provide player count directly
-      play_time: firstGame.yearpublished ? firstGame.yearpublished._ : "Unknown",
+      bgg_id: bggId,
+      name: game.name ? game.name.value : "Unknown",
+      year_published: game.yearpublished ? game.yearpublished.value : "Unknown",
+      min_players: game.minplayers ? game.minplayers.$.value : "Unknown",
+      max_players: game.maxplayers ? game.maxplayers.$.value : "Unknown",
+      min_play_time: game.minplaytime ? game.minplaytime.$.value : "Unknown",
+      max_play_time: game.maxplaytime ? game.maxplaytime.$.value : "Unknown",
+      description: game.description || "No description available.",
+      image: game.image || "",
+      thumbnail: game.thumbnail || "",
     };
 
-    console.log("✅ Found game on BGG:", gameData);
+    console.log("✅ Found full game details on BGG:", gameData);
     res.json({ game: gameData });
+
   } catch (error) {
     console.error("❌ Error fetching data from BGG:", error.message);
     res.status(500).json({ error: "Failed to fetch data from BGG" });

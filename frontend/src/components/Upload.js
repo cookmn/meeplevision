@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-const API_BASE_URL = "https://meeplevision-950d3d3db41e.herokuapp.com";
+// const API_BASE_URL = "https://meeplevision-950d3d3db41e.herokuapp.com";
+const API_BASE_URL = "http://localhost:5000";
 
 const Search = () => {
   const [query, setQuery] = useState("");
@@ -30,8 +31,6 @@ const Search = () => {
       console.log("Response:", response);
       setGames(response?.data?.games || []);
 
-      console.log('response is: ', response);
-
       if (!response?.data?.games?.length) {
         console.log("❌ Game not found in database, checking BGG...");
         fetchGameFromBGG(query);
@@ -47,14 +46,18 @@ const Search = () => {
     try {
       console.log(`🌍 Searching for ${gameName} in BGG...`);
       const response = await axios.get(`${API_BASE_URL}/api/bgg-search?query=${gameName}`);
-  
+
       if (response?.data?.game) {
+        console.log("✅ Found full game details from BGG:", response.data.game);
         setBggGame(response.data.game);
         setShowAddForm(true);
+        const minPlayTime = response.data.game.min_play_time;
+        const maxPlayTime = response.data.game.max_play_time;
+        const playTime = minPlayTime === maxPlayTime ? minPlayTime : `${minPlayTime}-${maxPlayTime}`;
         setNewGame({
           name: response.data.game.name,
-          player_count: response.data.game.player_count || "Unknown",
-          play_time: response.data.game.play_time || "Unknown",
+          player_count: `${response.data.game.min_players}-${response.data.game.max_players}`,
+          play_time: playTime,
         });
       } else {
         console.log("❌ No game found on BGG.");
@@ -83,6 +86,8 @@ const Search = () => {
       setError("Error adding game. Please try again.");
     }
   };
+
+  const bggPlayTime = bggGame?.min_play_time == bggGame?.max_play_time ? bggGame?.min_play_time : `${bggGame?.min_play_time} - ${bggGame?.max_play_time}`;
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-purple-600 to-indigo-700 text-white p-6">
@@ -121,7 +126,7 @@ const Search = () => {
               <span className="font-semibold">Players:</span> {game.player_count}
             </p>
             <p className="text-gray-700">
-              <span className="font-semibold">Play Time:</span> {game.play_time} min
+              <span className="font-semibold">Play Time:</span> {game.play_time} Minutes
             </p>
           </li>
         ))}
@@ -132,13 +137,19 @@ const Search = () => {
         <div className="mt-8 p-6 border border-yellow-400 bg-yellow-100 rounded-lg shadow-xl text-gray-900 max-w-lg mx-auto">
           <h2 className="text-xl font-semibold text-center text-yellow-700 mb-4">⚠️ This game is from BoardGameGeek</h2>
           <p className="text-center mb-4 text-gray-700">This data is not yet in our database.</p>
-          <h2 className="text-xl font-bold text-purple-700">{bggGame.name}</h2>
-          <p className="text-gray-700 mt-2">
-            <span className="font-semibold">Players:</span> {bggGame.player_count}
-          </p>
-          <p className="text-gray-700">
-            <span className="font-semibold">Play Time:</span> {bggGame.play_time} min
-          </p>
+
+          <div className="flex flex-col items-center">
+            {bggGame.thumbnail && (
+              <img src={bggGame.thumbnail} alt={bggGame.name} className="w-32 h-32 rounded-lg shadow-md mb-3" />
+            )}
+            <h2 className="text-xl font-bold text-purple-700">{bggGame.name}</h2>
+            <p className="text-gray-700 mt-2">
+              <span className="font-semibold">Players:</span> {bggGame.min_players} - {bggGame.max_players}
+            </p>
+            <p className="text-gray-700">
+              <span className="font-semibold">Play Time:</span> {bggPlayTime} Minutes
+            </p>
+          </div>
         </div>
       )}
 
