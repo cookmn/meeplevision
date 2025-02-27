@@ -36,7 +36,6 @@ const Search = () => {
     <div className="min-h-screen bg-gradient-to-r from-purple-600 to-indigo-700 text-white p-6">
       {/* 🌟 Pretty Header */}
       <header className="text-center mb-6">
-        <h1 className="text-4xl font-extrabold">MeepleVision 🎲</h1>
         <p className="text-lg text-gray-200 mt-2">Find your favorite board games!</p>
       </header>
 

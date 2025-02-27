@@ -47,10 +47,15 @@ function App() {
   return (
     <Router>
       <div className="App">
-        <header className="p-4 bg-purple-700 text-white text-center">
+        <header className="p-4 bg-purple-700 text-white text-center flex justify-between items-center">
           <h1 className="text-3xl font-bold">MeepleVision 🎲</h1>
+          {user && (
+            <p className="text-lg font-semibold">
+              Welcome to MeepleVision, {user?.displayName?.split(" ")[0]}! 🎉
+            </p>
+          )}
         </header>
-
+  
         <main className="p-6">
           <Routes>
             <Route path="/" element={<Upload />} />
