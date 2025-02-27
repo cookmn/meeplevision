@@ -9,36 +9,35 @@ const API_BASE_URL =
 const GameCard = ({ game, user }) => {
   const [rating, setRating] = useState("");
   const [submittedRating, setSubmittedRating] = useState(null);
-  const [allRatings, setAllRatings] = useState([]); // 🔥 Store all user ratings
+  const [allRatings, setAllRatings] = useState([]); // Store all user ratings
 
   // 🔍 Fetch Ratings when component mounts
   useEffect(() => {
     console.log("🔄 useEffect ran!");
-  
-    if (!game) {
-      console.log("❌ No game available yet.");
+
+    if (!game || !game.id) {
+      console.log("❌ No game or game ID available yet.");
       return;
     }
-  
-    console.log("✅ Game available:", game);
-  
-    if (!game.id) {
-      console.log("❌ Game ID is missing.");
-      return;
-    }
-  
+
     console.log("📌 Fetching ratings for game:", game.id);
-  
-    axios.get(`${API_BASE_URL}/api/ratings/${game.id}`)
+
+    axios
+      .get(`${API_BASE_URL}/api/ratings/${game.id}`, { withCredentials: true }) // 🔥 Fix: Add withCredentials
       .then(response => {
         console.log("📊 Ratings received:", response.data);
+        console.log("🔍 User:", user);
+
+        const userRating = response.data.ratings.find(rating => rating.google_id === user.id);
+        console.log("👤 Your rating:", userRating);
+
+        setSubmittedRating(userRating ? userRating.rating : null); // ✅ Fix this line
         setAllRatings(response.data.ratings || []);
       })
       .catch(error => {
         console.error("❌ Error fetching ratings:", error);
       });
-  }, [game]);
-  
+  }, [game, user]); // ✅ Add `user` as a dependency
 
   // ⭐ Submit a new rating
   const submitRating = async () => {
@@ -51,7 +50,7 @@ const GameCard = ({ game, user }) => {
       const response = await axios.post(
         `${API_BASE_URL}/api/ratings`,
         {
-          user_id: user.id, 
+          user_id: user.id,
           game_id: game.id,
           rating: parseInt(rating),
         },
@@ -59,7 +58,7 @@ const GameCard = ({ game, user }) => {
       );
 
       console.log("✅ Rating submitted:", response.data);
-      setSubmittedRating(rating);
+      setSubmittedRating(rating); // ✅ Store rating
 
       // 🔄 Refresh ratings after submitting
       setAllRatings([...allRatings, { name: user.name, rating }]);
@@ -73,16 +72,14 @@ const GameCard = ({ game, user }) => {
     <div className="bg-white text-gray-900 shadow-lg rounded-xl p-6 border border-gray-200 transition-transform transform hover:scale-105">
       <h2 className="text-xl font-bold text-purple-700">{game.name}</h2>
       {game.thumbnail && (
-
-
-          <img src={game.thumbnail} alt={game.name} className="w-32 h-32 rounded-lg shadow-md mb-3 mx-auto" />
+        <img src={game.thumbnail} alt={game.name} className="w-32 h-32 rounded-lg shadow-md mb-3 mx-auto" />
       )}
-                <p className="text-gray-700 mt-2">
-                  <span className="font-semibold">Players:</span> {game.player_count}
-                </p>
-                <p className="text-gray-700">
-                  <span className="font-semibold">Play Time:</span> {game.play_time} min
-                </p>
+      <p className="text-gray-700 mt-2">
+        <span className="font-semibold">Players:</span> {game.player_count}
+      </p>
+      <p className="text-gray-700">
+        <span className="font-semibold">Play Time:</span> {game.play_time} min
+      </p>
 
       {/* ⭐ Rating Input */}
       <div className="mt-4">
@@ -104,7 +101,7 @@ const GameCard = ({ game, user }) => {
       </div>
 
       {/* ⭐ Display User's Rating */}
-      {submittedRating && (
+      {submittedRating !== null && (
         <p className="mt-2 text-green-700">
           ✅ You rated this game: <strong>{submittedRating}/10</strong>
         </p>

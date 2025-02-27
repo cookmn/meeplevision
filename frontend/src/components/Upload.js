@@ -7,7 +7,7 @@ const API_BASE_URL =
     ? "https://meeplevision-950d3d3db41e.herokuapp.com"
     : "http://localhost:5000";
 
-const Search = () => {
+const Search = ({ user }) => {
   const [query, setQuery] = useState("");
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -117,7 +117,7 @@ const Search = () => {
       {/* 🎲 Show Game List */}
       <ul className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {games.map((game) => (
-          <GameCard key={game.id} game={game} />
+          <GameCard key={game.id} game={game} user={user} />
         ))}
       </ul>
 

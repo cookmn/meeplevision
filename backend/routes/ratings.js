@@ -34,7 +34,7 @@ router.get("/:gameId", async (req, res) => {
 
     try {
         const result = await db.query(
-            `SELECT ratings.rating, ratings.game_id, users.name 
+            `SELECT ratings.rating, ratings.game_id, users.name, users.google_id
              FROM ratings 
              JOIN users ON ratings.user_id = users.google_id 
              WHERE ratings.game_id = $1`,

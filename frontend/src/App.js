@@ -41,7 +41,7 @@ function App() {
 
         <main className="p-6">
           <Routes>
-            <Route path="/" element={<Upload onGameSelect={setSelectedGame} />} />
+            <Route path="/" element={<Upload onGameSelect={setSelectedGame} user={user} />} />
             {selectedGame && <GameCard game={selectedGame} user={user} />}
           </Routes>
         </main>
