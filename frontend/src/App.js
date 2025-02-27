@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Route, Routes, Navigate, useNavigate } from "react-router-dom";
 import Upload from "./components/Upload";
-import Search from "./components/Search";
 import SuggestAGame from "./pages/SuggestAGame"; // 🎲 New page!
 import MyGames from "./pages/MyGames";
 import axios from "axios";
@@ -85,7 +84,6 @@ function App() {
         <main className="p-6">
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/upload" element={<Upload />} />
             <Route path="/search" element={<Upload user={user} />} />
             <Route path="/suggestAGame" element={<SuggestAGame />} />
             <Route path="/myGames" element={<MyGames user={user} />} />
