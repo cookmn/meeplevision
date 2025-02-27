@@ -1,67 +1,45 @@
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const db = require("./db");
-require("dotenv").config();
+require("dotenv").config(); // Load environment variables
 
-// ✅ Ensure environment variables are loaded
-if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-  throw new Error("Missing Google OAuth environment variables!");
+const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+const CALLBACK_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://meeplevision-950d3d3db41e.herokuapp.com/auth/google/callback"
+    : "http://localhost:5000/auth/google/callback";
+
+if (!CLIENT_ID || !CLIENT_SECRET) {
+  console.error("❌ Google OAuth credentials are missing!");
+  process.exit(1);
 }
 
-// ✅ Configure Google OAuth Strategy
+// ✅ Set up Google OAuth Strategy
 passport.use(
   new GoogleStrategy(
     {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: process.env.NODE_ENV === "production"
-        ? "https://meeplevision-950d3d3db41e.herokuapp.com/auth/google/callback"
-        : "http://localhost:5000/auth/google/callback",
+      clientID: CLIENT_ID,
+      clientSecret: CLIENT_SECRET,
+      callbackURL: CALLBACK_URL,
     },
     async (accessToken, refreshToken, profile, done) => {
-      try {
-        console.log("✅ Google profile received:", profile);
+      console.log("🔑 Google Profile:", profile);
 
-        // Extract user data
-        const googleId = profile.id;
-        const name = profile.displayName;
-        const email = profile.emails[0].value;
-        const photo = profile.photos[0].value;
-
-        // Check if user exists in DB
-        const existingUser = await db.query("SELECT * FROM users WHERE google_id = $1", [googleId]);
-
-        let user;
-        if (existingUser.rows.length > 0) {
-          user = existingUser.rows[0];
-          console.log("✅ User found in database:", user);
-        } else {
-          // Insert new user
-          const insertQuery = `INSERT INTO users (google_id, name, email, photo) VALUES ($1, $2, $3, $4) RETURNING *`;
-          const insertValues = [googleId, name, email, photo];
-          const newUser = await db.query(insertQuery, insertValues);
-          user = newUser.rows[0];
-          console.log("✅ New user added:", user);
-        }
-
-        return done(null, user);
-      } catch (err) {
-        console.error("❌ Error in Google OAuth:", err);
-        return done(err, null);
-      }
+      // Here you can store user info in the DB if needed
+      return done(null, profile);
     }
   )
 );
 
-// ✅ Serialize & Deserialize User
-passport.serializeUser((user, done) => done(null, user.id));
-passport.deserializeUser(async (id, done) => {
-  try {
-    const user = await db.query("SELECT * FROM users WHERE id = $1", [id]);
-    done(null, user.rows[0]);
-  } catch (err) {
-    done(err, null);
-  }
+// ✅ Serialize user to session
+passport.serializeUser((user, done) => {
+  done(null, user);
 });
 
+// ✅ Deserialize user from session
+passport.deserializeUser((obj, done) => {
+  done(null, obj);
+});
+
+// ✅ Export Passport Config
 module.exports = passport;

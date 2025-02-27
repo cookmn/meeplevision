@@ -8,3 +8,5 @@ meeplevision-env/
 *.dylib
 *.so
 backend/.env
+
+cookies.txt
