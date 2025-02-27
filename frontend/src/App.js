@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate, useNavigate } from "r
 import Upload from "./components/Upload";
 import Search from "./components/Search";
 import SuggestAGame from "./pages/SuggestAGame"; // 🎲 New page!
+import MyGames from "./pages/MyGames";
 import axios from "axios";
 import "./App.css";
 
@@ -32,6 +33,12 @@ function HomePage() {
           className="p-4 bg-yellow-500 hover:bg-yellow-600 text-white font-bold rounded-lg shadow-lg transition-transform transform hover:scale-105"
         >
           🎲 Suggest a Game!
+        </button>
+        <button
+          onClick={() => navigate("/myGames")}
+          className="p-4 bg-yellow-500 hover:bg-yellow-600 text-white font-bold rounded-lg shadow-lg transition-transform transform hover:scale-105"
+        >
+          🎲 My Games!
         </button>
       </div>
     </div>
@@ -72,7 +79,7 @@ function App() {
     <Router>
       <div className="App">
         <header className="p-4 bg-purple-700 text-white text-center">
-          <h1 className="text-3xl font-bold">Welcome to MeepleVision, {user.given_name}! 🎲</h1>
+          <h1 className="text-3xl font-bold">Welcome to MeepleVision, {user.name || user.givenName}! 🎲</h1>
         </header>
 
         <main className="p-6">
@@ -81,6 +88,7 @@ function App() {
             <Route path="/upload" element={<Upload />} />
             <Route path="/search" element={<Upload user={user} />} />
             <Route path="/suggestAGame" element={<SuggestAGame />} />
+            <Route path="/myGames" element={<MyGames user={user} />} />
             <Route path="*" element={<Navigate replace to="/" />} /> {/* Redirect unknown routes */}
           </Routes>
         </main>
