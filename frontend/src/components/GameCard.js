@@ -58,10 +58,13 @@ const GameCard = ({ game, user }) => {
       );
 
       console.log("✅ Rating submitted:", response.data);
+      console.log('submitting rating');
       setSubmittedRating(rating); // ✅ Store rating
+      console.log('all ratings');
 
       // 🔄 Refresh ratings after submitting
-      setAllRatings([...allRatings, { name: user.name, rating }]);
+      console.log('user is: ', user);
+      setAllRatings([...allRatings, { name: user.displayName, rating, google_id: user.id }]);
 
     } catch (error) {
       console.error("❌ Error submitting rating:", error);
@@ -113,11 +116,12 @@ const GameCard = ({ game, user }) => {
           <h3 className="text-lg font-semibold text-gray-800">Ratings:</h3>
           <ul className="list-disc pl-5">
           {allRatings.map((r, index) => {
+            console.log('r is: ', r);
         if (r.google_id !== user.id) {
           // ✅ Display OTHER people's ratings normally
           return (
             <li key={index} className="text-gray-700">
-              <strong>{r.name}</strong>: {r.rating}/10
+              <strong>{r.name.givenName}</strong>: {r.rating}/10
             </li>
           );
         }
