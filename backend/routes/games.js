@@ -96,4 +96,53 @@ router.post("/games", async (req, res) => {
   }
 });
 
+router.get("/suggest", async (req, res) => {
+    try {
+      const { numPlayers, playTime } = req.query;
+      console.log(`🔎 Searching for games with ${numPlayers} players and ${playTime} minutes`);
+  
+      if (!numPlayers || !playTime) {
+        return res.status(400).json({ error: "Number of players and play time are required" });
+      }
+  
+      const query = `
+        SELECT * FROM games
+        WHERE 
+          (
+            -- Case 1: Exact match (single integer stored as text)
+            player_count ~ '^[0-9]+$' AND CAST(player_count AS INTEGER) = $1
+
+            -- Case 2: Range match (e.g., "2-4")
+            OR (
+              player_count LIKE '%-%'
+              AND CAST(split_part(player_count, '-', 1) AS INTEGER) <= $1
+              AND CAST(split_part(player_count, '-', 2) AS INTEGER) >= $1
+            )
+          )
+          AND (
+            -- Case 1: Exact match (single integer stored as text)
+            play_time ~ '^[0-9]+$' AND CAST(play_time AS INTEGER) = $2
+
+            -- Case 2: Range match (e.g., "30-60")
+            OR (
+              play_time LIKE '%-%'
+              AND CAST(split_part(play_time, '-', 1) AS INTEGER) <= $2
+              AND CAST(split_part(play_time, '-', 2) AS INTEGER) >= $2
+            )
+          )
+        ORDER BY name;
+    `;
+
+    console.log(numPlayers, playTime);
+    const values = [parseInt(numPlayers), parseInt(playTime)];
+
+    const result = await db.query(query, values);
+      res.json({ games: result.rows });
+    } catch (error) {
+      console.error("❌ Error fetching game suggestions:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+  
+
 module.exports = router;
