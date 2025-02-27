@@ -25,7 +25,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,  // 🚀 Set to false so only logged-in users get a session
   cookie: {
-    secure: process.env.NODE_ENV === "production", // ✅ Secure cookies in production
+    secure: false,
     httpOnly: true, // Prevents JS from accessing cookies
     sameSite: "Lax" // Allows session sharing between frontend & backend
   }
