@@ -72,12 +72,17 @@ const GameCard = ({ game, user }) => {
   return (
     <div className="bg-white text-gray-900 shadow-lg rounded-xl p-6 border border-gray-200 transition-transform transform hover:scale-105">
       <h2 className="text-xl font-bold text-purple-700">{game.name}</h2>
-      <p className="text-gray-700 mt-2">
-        <span className="font-semibold">Players:</span> {game.player_count}
-      </p>
-      <p className="text-gray-700">
-        <span className="font-semibold">Play Time:</span> {game.play_time} min
-      </p>
+      {game.thumbnail && (
+
+
+          <img src={game.thumbnail} alt={game.name} className="w-32 h-32 rounded-lg shadow-md mb-3 mx-auto" />
+      )}
+                <p className="text-gray-700 mt-2">
+                  <span className="font-semibold">Players:</span> {game.player_count}
+                </p>
+                <p className="text-gray-700">
+                  <span className="font-semibold">Play Time:</span> {game.play_time} min
+                </p>
 
       {/* ⭐ Rating Input */}
       <div className="mt-4">
