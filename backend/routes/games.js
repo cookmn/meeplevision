@@ -14,7 +14,7 @@ router.get("/search", async (req, res) => {
   try {
     console.log(`🔍 Searching for: ${query}`);
 
-    let dbResult = await db.query("SELECT * FROM games WHERE LOWER(name) = LOWER($1)", [query]);
+    let dbResult = await db.query("SELECT * FROM games WHERE LOWER(name) ilike LOWER($1)", [`%${query}%`]);
     if (dbResult.rows.length > 0) {
       return res.json({ games: dbResult.rows });
     }
