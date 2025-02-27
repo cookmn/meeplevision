@@ -82,7 +82,7 @@ const GameCard = ({ game, user }) => {
       </p>
 
       {/* ⭐ Rating Input */}
-      <div className="mt-4">
+      {!submittedRating && <div className="mt-4">
         <input
           type="number"
           min="1"
@@ -98,7 +98,7 @@ const GameCard = ({ game, user }) => {
         >
           Submit
         </button>
-      </div>
+      </div> }
 
       {/* ⭐ Display User's Rating */}
       {submittedRating !== null && (
@@ -112,11 +112,16 @@ const GameCard = ({ game, user }) => {
         <div className="mt-4">
           <h3 className="text-lg font-semibold text-gray-800">Ratings:</h3>
           <ul className="list-disc pl-5">
-            {allRatings.map((r, index) => (
-              <li key={index} className="text-gray-700">
-                <strong>{r.name}</strong>: {r.rating}/10
-              </li>
-            ))}
+          {allRatings.map((r, index) => {
+        if (r.google_id !== user.id) {
+          // ✅ Display OTHER people's ratings normally
+          return (
+            <li key={index} className="text-gray-700">
+              <strong>{r.name}</strong>: {r.rating}/10
+            </li>
+          );
+        }
+      })}
           </ul>
         </div>
       )}
