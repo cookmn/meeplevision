@@ -20,19 +20,16 @@ app.use(
   })
 );
 
-// ✅ Session Middleware
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "supersecretstring",
-    resave: false,
-    saveUninitialized: true,
-    cookie: {
-      secure: process.env.NODE_ENV === "production",
-      httpOnly: true,
-      sameSite: "Lax",
-    },
-  })
-);
+app.use(session({
+  secret: process.env.SESSION_SECRET || "supersecretstring",
+  resave: false,
+  saveUninitialized: false,  // 🚀 Set to false so only logged-in users get a session
+  cookie: {
+    secure: process.env.NODE_ENV === "production", // ✅ Secure cookies in production
+    httpOnly: true, // Prevents JS from accessing cookies
+    sameSite: "Lax" // Allows session sharing between frontend & backend
+  }
+}));
 
 // ✅ Initialize Passport (Auth)
 require("./auth"); // Make sure auth.js is properly set up
