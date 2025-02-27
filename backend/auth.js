@@ -39,8 +39,8 @@ passport.use(
 
         // ✅ Insert new user
         const insertQuery = `
-          INSERT INTO users (id, google_id, name, email, profile_picture)
-          VALUES (gen_random_uuid(), $1, $2, $3, $4)
+          INSERT INTO users (google_id, name, email, profile_picture)
+          VALUES ($1, $2, $3, $4)
           RETURNING *;
         `;
 

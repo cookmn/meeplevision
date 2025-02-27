@@ -5,20 +5,20 @@ const router = express.Router();
 // ✅ Submit a rating
 router.post("/", async (req, res) => {
     console.log('req.body is: ', req.body);
-    const { user_id, game_id, rating } = req.body;
+    const { google_id, game_id, rating } = req.body;
 
-    if (!user_id || !game_id || !rating) {
+    if (!google_id || !game_id || !rating) {
         return res.status(400).json({ error: "Missing required fields" });
     }
 
     try {
         const result = await db.query(
-            `INSERT INTO ratings (user_id, game_id, rating) 
+            `INSERT INTO ratings (google_id, game_id, rating) 
              VALUES ($1, $2, $3)
-             ON CONFLICT (user_id, game_id) 
+             ON CONFLICT (google_id, game_id) 
              DO UPDATE SET rating = EXCLUDED.rating
              RETURNING *`,
-            [user_id, game_id, rating]
+            [google_id, game_id, rating]
         );
 
         res.json({ message: "Rating submitted!", rating: result.rows[0] });
@@ -41,7 +41,7 @@ router.get("/myGames", async (req, res) => {
         `SELECT g.id, g.name, g.thumbnail, r.rating 
          FROM ratings r 
          JOIN games g ON r.game_id = g.id 
-         WHERE r.user_id = $1 
+         WHERE r.google_id = $1 
          ORDER BY r.rating DESC, g.name ASC`,
         [req.user.google_id]
       );
@@ -61,7 +61,7 @@ router.get("/:gameId", async (req, res) => {
         const result = await db.query(
             `SELECT ratings.rating, ratings.game_id, users.name, users.google_id
              FROM ratings 
-             JOIN users ON ratings.user_id = users.google_id 
+             JOIN users ON ratings.google_id = users.google_id 
              WHERE ratings.game_id = $1`,
             [gameId]
           );

@@ -28,7 +28,7 @@ const GameCard = ({ game, user }) => {
         console.log("📊 Ratings received:", response.data);
         console.log("🔍 User:", user);
 
-        const userRating = response.data.ratings.find(rating => rating.google_id === user.id);
+        const userRating = response.data.ratings.find(rating => rating.google_id === user.google_id);
         console.log("👤 Your rating:", userRating);
 
         setSubmittedRating(userRating ? userRating.rating : null); // ✅ Fix this line
@@ -50,7 +50,7 @@ const GameCard = ({ game, user }) => {
       const response = await axios.post(
         `${API_BASE_URL}/api/ratings`,
         {
-          user_id: user.id,
+          google_id: user.google_id,
           game_id: game.id,
           rating: parseInt(rating),
         },
@@ -64,7 +64,7 @@ const GameCard = ({ game, user }) => {
 
       // 🔄 Refresh ratings after submitting
       console.log('user is: ', user);
-      setAllRatings([...allRatings, { name: user.displayName, rating, google_id: user.id }]);
+      setAllRatings([...allRatings, { name: user.displayName, rating, google_id: user.google_id }]);
 
     } catch (error) {
       console.error("❌ Error submitting rating:", error);
@@ -117,7 +117,7 @@ const GameCard = ({ game, user }) => {
           <ul className="list-disc pl-5">
           {allRatings.map((r, index) => {
             console.log('r is: ', r);
-        if (r.google_id !== user.id) {
+        if (r.google_id !== user.google_id) {
           // ✅ Display OTHER people's ratings normally
           return (
             <li key={index} className="text-gray-700">
