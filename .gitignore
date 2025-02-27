@@ -12,3 +12,5 @@ backend/.env
 cookies.txt
 
 .DS_Store
+
+backend/.env
