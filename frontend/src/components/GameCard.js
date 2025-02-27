@@ -121,7 +121,7 @@ const GameCard = ({ game, user }) => {
           // ✅ Display OTHER people's ratings normally
           return (
             <li key={index} className="text-gray-700">
-              <strong>{r.name.givenName}</strong>: {r.rating}/10
+              <strong>{r.name}</strong>: {r.rating}/10
             </li>
           );
         }
