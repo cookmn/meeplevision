@@ -20,6 +20,9 @@ app.use(
   })
 );
 
+app.use(express.json()); // ✅ Parses JSON request bodies
+app.use(express.urlencoded({ extended: true })); // ✅ Handles URL-encoded bodies
+
 app.use(session({
   secret: process.env.SESSION_SECRET || "supersecretstring",
   resave: false,
@@ -39,6 +42,7 @@ app.use(passport.session());
 // ✅ Import Routes
 app.use("/api", require("./routes/games")); // Game routes
 app.use("/auth", require("./routes/auth")); // Auth routes
+app.use("/api/ratings", require("./routes/ratings"));
 
 // ✅ Serve Frontend
 app.use(express.static(path.join(__dirname, "../frontend/build")));
