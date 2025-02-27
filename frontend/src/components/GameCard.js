@@ -9,23 +9,38 @@ const API_BASE_URL =
 const GameCard = ({ game, user }) => {
   const [rating, setRating] = useState("");
   const [submittedRating, setSubmittedRating] = useState(null);
+  const [allRatings, setAllRatings] = useState([]); // 🔥 Store all user ratings
 
-  const fetchRatings = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/ratings/${game.id}`);
-      const userRating = response.data.ratings.find(r => r.user_id === user.id);
-      if (userRating) {
-        setSubmittedRating(userRating.rating);
-      }
-    } catch (error) {
-      console.error("Error fetching ratings:", error);
-    }
-  };
-
+  // 🔍 Fetch Ratings when component mounts
   useEffect(() => {
-    fetchRatings();
-  }, []);
+    console.log("🔄 useEffect ran!");
+  
+    if (!game) {
+      console.log("❌ No game available yet.");
+      return;
+    }
+  
+    console.log("✅ Game available:", game);
+  
+    if (!game.id) {
+      console.log("❌ Game ID is missing.");
+      return;
+    }
+  
+    console.log("📌 Fetching ratings for game:", game.id);
+  
+    axios.get(`${API_BASE_URL}/api/ratings/${game.id}`)
+      .then(response => {
+        console.log("📊 Ratings received:", response.data);
+        setAllRatings(response.data.ratings || []);
+      })
+      .catch(error => {
+        console.error("❌ Error fetching ratings:", error);
+      });
+  }, [game]);
+  
 
+  // ⭐ Submit a new rating
   const submitRating = async () => {
     if (!rating || rating < 1 || rating > 10) {
       alert("Please enter a rating between 1 and 10");
@@ -33,14 +48,22 @@ const GameCard = ({ game, user }) => {
     }
 
     try {
-      await axios.post(`${API_BASE_URL}/api/ratings`, {
-        user_id: user.id,
-        game_id: game.id,
-        rating: parseInt(rating),
-      });
+      const response = await axios.post(
+        `${API_BASE_URL}/api/ratings`,
+        {
+          user_id: user.id, 
+          game_id: game.id,
+          rating: parseInt(rating),
+        },
+        { withCredentials: true }
+      );
 
+      console.log("✅ Rating submitted:", response.data);
       setSubmittedRating(rating);
-      fetchRatings();
+
+      // 🔄 Refresh ratings after submitting
+      setAllRatings([...allRatings, { name: user.name, rating }]);
+
     } catch (error) {
       console.error("❌ Error submitting rating:", error);
     }
@@ -49,14 +72,50 @@ const GameCard = ({ game, user }) => {
   return (
     <div className="bg-white text-gray-900 shadow-lg rounded-xl p-6 border border-gray-200 transition-transform transform hover:scale-105">
       <h2 className="text-xl font-bold text-purple-700">{game.name}</h2>
-      <p><span className="font-semibold">Players:</span> {game.player_count}</p>
-      <p><span className="font-semibold">Play Time:</span> {game.play_time} min</p>
-      {submittedRating ? (
-        <p className="text-green-600">Your Rating: {submittedRating}/10</p>
-      ) : (
-        <div>
-          <input type="number" min="1" max="10" value={rating} onChange={(e) => setRating(e.target.value)} />
-          <button onClick={submitRating}>Submit Rating</button>
+      <p className="text-gray-700 mt-2">
+        <span className="font-semibold">Players:</span> {game.player_count}
+      </p>
+      <p className="text-gray-700">
+        <span className="font-semibold">Play Time:</span> {game.play_time} min
+      </p>
+
+      {/* ⭐ Rating Input */}
+      <div className="mt-4">
+        <input
+          type="number"
+          min="1"
+          max="10"
+          placeholder="Rate 1-10"
+          value={rating}
+          onChange={(e) => setRating(e.target.value)}
+          className="border p-2 rounded w-20"
+        />
+        <button
+          onClick={submitRating}
+          className="ml-2 p-2 bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg shadow-lg transition-transform transform hover:scale-105"
+        >
+          Submit
+        </button>
+      </div>
+
+      {/* ⭐ Display User's Rating */}
+      {submittedRating && (
+        <p className="mt-2 text-green-700">
+          ✅ You rated this game: <strong>{submittedRating}/10</strong>
+        </p>
+      )}
+
+      {/* ⭐ Display All Ratings */}
+      {allRatings.length > 0 && (
+        <div className="mt-4">
+          <h3 className="text-lg font-semibold text-gray-800">Ratings:</h3>
+          <ul className="list-disc pl-5">
+            {allRatings.map((r, index) => (
+              <li key={index} className="text-gray-700">
+                <strong>{r.name}</strong>: {r.rating}/10
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>

@@ -34,9 +34,12 @@ router.get("/:gameId", async (req, res) => {
 
     try {
         const result = await db.query(
-            `SELECT user_id, rating FROM ratings WHERE game_id = $1`,
+            `SELECT ratings.rating, ratings.game_id, users.name 
+             FROM ratings 
+             JOIN users ON ratings.user_id = users.google_id 
+             WHERE ratings.game_id = $1`,
             [gameId]
-        );
+          );
         res.json({ ratings: result.rows });
     } catch (error) {
         console.error("❌ Error fetching ratings:", error);
